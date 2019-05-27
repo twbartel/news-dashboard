@@ -1,12 +1,19 @@
-const
-    expressHandlebars = require('express-handlebars'),
+const expressHandlebars = require('express-handlebars'),
     express = require('express'),
     bodyParser = require('body-parser'),
     routing = require('./routes/index'),
-    session = require('express-session');
+    session = require('express-session'),
+    RedisStore = require('connect-redis')(session),
+    redis = require('redis'),
+    client = redis.createClient();
 require('dotenv').config();
 
 const server = express();
+
+const redisOptions = {
+    client,
+    url: process.env.REDIS_URL
+};
 
 server.set('viewDir', 'views');
 
@@ -16,26 +23,34 @@ const logUrlMiddleware = (req, res, next) => {
 };
 
 server.use(logUrlMiddleware);
-server.use(bodyParser.urlencoded({
-    extended: false
-}));
+server.use(
+    bodyParser.urlencoded({
+        extended: false
+    })
+);
 server.use(bodyParser.json());
 server.use(express.static('public'));
-server.use(session({
-    secret: process.env.SESSION_SECRET || 'Please_SET_session_SeCreT',
-    resave: false,
-    saveUninitialized: true
-}));
+server.use(
+    session({
+        store: new RedisStore(redisOptions),
+        secret: process.env.SESSION_SECRET || 'Please_SET_session_SeCreT',
+        resave: false,
+        saveUninitialized: true
+    })
+);
 server.use((req, res, next) => {
     res.locals.isLoggedIn = req.session && req.session.isLoggedIn;
     res.locals.user = req.session && req.session.user;
     next();
 });
 
-server.engine('html', expressHandlebars({
-    extname: 'html',
-    partialsDir: 'views/partials'
-}));
+server.engine(
+    'html',
+    expressHandlebars({
+        extname: 'html',
+        partialsDir: 'views/partials'
+    })
+);
 
 server.set('view engine', 'html');
 
