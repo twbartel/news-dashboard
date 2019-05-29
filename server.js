@@ -6,11 +6,11 @@ const expressHandlebars = require('express-handlebars'),
     RedisStore = require('connect-redis')(session);
 require('dotenv').config();
 
+const server = express();
+
 const redisOptions = {
     url: process.env.REDIS_URL
 };
-
-const server = express();
 
 server.set('viewDir', 'views');
 
