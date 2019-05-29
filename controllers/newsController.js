@@ -1,10 +1,13 @@
 const newsService = require('../services/newsService');
 
 const renderHome = (req, res) => {
+    console.log('Session', req.session);
     let articles = [],
         message = '';
 
-        newsService.getNews().then(response => {
+    newsService
+        .getNews()
+        .then(response => {
             articles = response.articles;
         })
         .catch(err => {
